@@ -1,0 +1,20 @@
+{
+  "name": "dynamodb-timeseries-test",
+  "version": "0.0.1",
+  "repository": "https://github.com/cerealcoder/dynamodb-timeseries",
+  "description": "test package for dynamodb-timeseries",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/tape/bin/tape"
+  },
+  "author": "pszabop",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "aws-sdk": "^2.610.0",
+    "tape": "^4.10.1",
+    "tape-promise": "^4.0.0",
+    "random-js": "^2.1.0",
+    "underscore": "^1.9.1"
+  }
+}
