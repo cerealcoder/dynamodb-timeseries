@@ -2,6 +2,29 @@
 
 ## Usage
 
+1. Add this package to your package.json file:
+
+        "dependencies": {
+            ...
+            "dynamodb-timeseries": "^0.0.1",
+            ...
+        }
+
+1. Add a require statement to your code:
+
+        const DynamoDbTimeSeries = require('dynamodb-timeseries/dynamodb-time-series.js');
+
+1. Create an instance of the API that attaches to a DynamoDB table:
+
+        const dbApiInstance = Object.create(DynamoDbTimeSeries).setOptions({tableName: 'your_table_name'});
+
+1. Write to the DynamoDB table:
+
+        const putResult = await dbApiInstance.putEvent(timeSeriesUniqueId, 'testEvent', startTime, event);
+
+
+See files `test/*.js` for specific examples.
+
 
 ### Prerequisites
 * You must have access to AWS, including any credentials, IAM permissions, and region as required by the AWS SDK
