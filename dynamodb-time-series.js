@@ -14,13 +14,24 @@ exports = module.exports = DynamoTimeSeries;
 DynamoTimeSeries.options = {
   tableName: null,
 };
+
 DynamoTimeSeries.setOptions = function(options) {
   this.verifyOptions(options);
   this.options = options;
+  this.dynamoDbInstancwe = new AWS.DynamoDB( options.awsOptions );
   return this;
 }
+
 DynamoTimeSeries.verifyOptions = function(options) {
+  // mandatory options
   assert(options.tableName, 'table name must be defined');
+
+  // optional options
+  //
+  //  options.awsOptions;
+  //    use for e.g. accessKeyID and the like when constructing AWS objects
+  //    @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
+  options.awsOptions = options.awsOptions? options.awsOptions : {};
 }
 
 /**
@@ -33,7 +44,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient();
+  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
@@ -59,8 +70,7 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   assert(startTime, 'startTime required');
   assert(endTime, 'endTime required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient();
-
+  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
