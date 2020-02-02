@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const AWS = require('aws-sdk');
+const packageJson = require('./package.json');
 
 
 const DynamoTimeSeries = Object.create({});
@@ -17,7 +18,7 @@ DynamoTimeSeries.options = {
 
 DynamoTimeSeries.setOptions = function(options) {
   this.options = this.verifyOptions(options);
-  this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
+  this.dynamoDbInstance = new this.options.awsInstance.DynamoDB( options.awsOptions );
   return this;
 };
 
@@ -33,7 +34,8 @@ DynamoTimeSeries.verifyOptions = function(options) {
   //
   //    note:  use the `credentials` options not the individual accessKey & etc options when using
   //    credentials obtained from sts
-  options.awsOptions = options.awsOptions? options.awsOptions : {};
+  options.awsOptions  = options.awsOptions  ? options.awsOptions : {};
+  options.awsInstance = options.awsInstance ? options.awsInstance : AWS;
 
   return options;
 };
@@ -48,17 +50,10 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  console.log('DynamoTimeSeries.putEvent() version 0.0.10');
-
+  console.log(`DynamoTimeSeries.putEvent() version ${packageJson.version}`);
   console.log(this.options);
-  // AWS.config.update({
-  //     region:          'us-east-1',
-  //     accessKeyId:     this.options.awsOptions.accessKeyId,
-  //     secretAccessKey: this.options.awsOptions.secretAccessKey,
-  //     sessionToken:    this.options.awsOptions.sessionToken,
-  // });
 
-  const ddb = new AWS.DynamoDB.DocumentClient({
+  const ddb = new this.options.awsInstance.DynamoDB.DocumentClient({
       service:     this.dynamoDbInstance,
       credentials: this.options.awsOptions.credentials,
   });
@@ -87,7 +82,7 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   assert(startTime, 'startTime required');
   assert(endTime, 'endTime required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
+  const ddb = new this.options.awsInstance.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
