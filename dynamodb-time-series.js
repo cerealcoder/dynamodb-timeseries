@@ -51,12 +51,12 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   console.log('DynamoTimeSeries.putEvent() version 0.0.8');
 
   console.log(this.options);
-  AWS.config.update({
-      region:          'us-east-1',
-      accessKeyId:     this.options.awsOptions.accessKeyId,
-      secretAccessKey: this.options.awsOptions.secretAccessKey,
-      sessionToken:    this.options.awsOptions.sessionToken,
-  });
+  // AWS.config.update({
+  //     region:          'us-east-1',
+  //     accessKeyId:     this.options.awsOptions.accessKeyId,
+  //     secretAccessKey: this.options.awsOptions.secretAccessKey,
+  //     sessionToken:    this.options.awsOptions.sessionToken,
+  // });
 
   const ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
 
