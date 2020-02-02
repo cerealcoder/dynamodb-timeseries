@@ -18,7 +18,7 @@ DynamoTimeSeries.options = {
 DynamoTimeSeries.setOptions = function(options) {
   this.verifyOptions(options);
   this.options = options;
-  this.dynamoDbInstancwe = new AWS.DynamoDB( options.awsOptions );
+  this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
   return this;
 }
 
