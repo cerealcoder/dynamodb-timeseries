@@ -53,10 +53,15 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   console.log(`DynamoTimeSeries.putEvent() version ${packageJson.version}`);
   console.log(this.options);
 
-  const ddb = new this.options.awsInstance.DynamoDB.DocumentClient({
+  let ddb;
+  try {
+    ddb = new this.options.awsInstance.DynamoDB.DocumentClient({
       service:     this.dynamoDbInstance,
       credentials: this.options.awsOptions.credentials,
-  });
+    });
+  } catch(exception) {
+    console.log(`Function this.options.awsInstance.DynamoDB.DocumentClient() failed: ${exception}`);
+  }
 
   const ddbParams = {
     TableName: this.options.tableName,
@@ -67,8 +72,12 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
     }
   };
 
-  const result = await ddb.put(ddbParams).promise();
-
+  let result = null;
+  try {
+    result = await ddb.put(ddbParams).promise();
+  } catch(exception) {
+      console.log(`Function ddb.put() failed: ${exception}`);
+  }
   return result;
 };
 
