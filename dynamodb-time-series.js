@@ -76,7 +76,8 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   try {
     result = await ddb.put(ddbParams).promise();
   } catch(exception) {
-      console.log(`Function ddb.put() failed: ${exception}`);
+      console.log(`Function ddb.put() failed: ${exception}, stack = ${exception.stack}`);
+      throw exception;
   }
   return result;
 };
