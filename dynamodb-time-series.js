@@ -48,7 +48,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  console.log('DynamoTimeSeries.putEvent() version 0.0.8');
+  console.log('DynamoTimeSeries.putEvent() version 0.0.10');
 
   console.log(this.options);
   // AWS.config.update({
@@ -58,7 +58,10 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   //     sessionToken:    this.options.awsOptions.sessionToken,
   // });
 
-  const ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
+  const ddb = new AWS.DynamoDB.DocumentClient({
+      service:     this.dynamoDbInstance,
+      credentials: this.options.awsOptions.credentials,
+  });
 
   const ddbParams = {
     TableName: this.options.tableName,
