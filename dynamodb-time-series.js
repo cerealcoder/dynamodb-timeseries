@@ -46,7 +46,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
 
   console.log('DynamoTimeSeries.putEvent()');
   console.log(this.options);
-  const ddb = new AWS.DynamoDB.DocumentClient(this.options.awsOptions);
+  const ddb = new AWS.DynamoDB.DocumentClient({params: this.options.awsOptions});
 
   const ddbParams = {
     TableName: this.options.tableName,
