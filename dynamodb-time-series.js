@@ -16,8 +16,7 @@ DynamoTimeSeries.options = {
 };
 
 DynamoTimeSeries.setOptions = function(options) {
-  this.verifyOptions(options);
-  this.options = options;
+  this.options = this.verifyOptions(options);
   this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
   return this;
 };
@@ -31,7 +30,12 @@ DynamoTimeSeries.verifyOptions = function(options) {
   //  options.awsOptions;
   //    use for e.g. accessKeyID and the like when constructing AWS objects
   //    @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
+  //
+  //    note:  use the `credentials` options not the individual accessKey & etc options when using
+  //    credentials obtained from sts
   options.awsOptions = options.awsOptions? options.awsOptions : {};
+
+  return options;
 };
 
 /**
@@ -44,9 +48,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  console.log('DynamoTimeSeries.putEvent()');
-  console.log(this.options);
-  const ddb = new AWS.DynamoDB.DocumentClient({params: this.options.awsOptions});
+  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
