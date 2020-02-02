@@ -17,7 +17,6 @@ DynamoTimeSeries.options = {
 
 DynamoTimeSeries.setOptions = function(options) {
   this.verifyOptions(options);
-  console.log(options);
   this.options = options;
   this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
   return this;
@@ -45,7 +44,9 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
+  console.log('DynamoTimeSeries.putEvent()');
+  console.log(this.options);
+  const ddb = new AWS.DynamoDB.DocumentClient(this.options.awsOptions);
 
   const ddbParams = {
     TableName: this.options.tableName,
