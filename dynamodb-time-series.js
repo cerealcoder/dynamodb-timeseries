@@ -20,7 +20,7 @@ DynamoTimeSeries.setOptions = function(options) {
   this.options = options;
   this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
   return this;
-}
+};
 
 DynamoTimeSeries.verifyOptions = function(options) {
   // mandatory options
@@ -32,7 +32,7 @@ DynamoTimeSeries.verifyOptions = function(options) {
   //    use for e.g. accessKeyID and the like when constructing AWS objects
   //    @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/DynamoDB.html#constructor-property
   options.awsOptions = options.awsOptions? options.awsOptions : {};
-}
+};
 
 /**
  *
@@ -44,7 +44,9 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
+  console.log('DynamoTimeSeries.putEvent()');
+  console.log(this.options);
+  const ddb = new AWS.DynamoDB.DocumentClient({params: this.options.awsOptions});
 
   const ddbParams = {
     TableName: this.options.tableName,
@@ -58,7 +60,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   const result = await ddb.put(ddbParams).promise();
 
   return result;
-}
+};
 
 /**
  *
@@ -85,4 +87,4 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   const result = await ddb.query(ddbParams).promise();
 
   return result;
-}
+};
