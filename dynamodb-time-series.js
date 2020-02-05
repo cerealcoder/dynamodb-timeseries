@@ -18,7 +18,7 @@ DynamoTimeSeries.options = {
 
 DynamoTimeSeries.setOptions = function(options) {
   this.options = this.verifyOptions(options);
-  this.dynamoDbInstance = new this.options.awsInstance.DynamoDB( options.awsOptions );
+  this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
   return this;
 };
 
@@ -35,7 +35,6 @@ DynamoTimeSeries.verifyOptions = function(options) {
   //    note:  use the `credentials` options not the individual accessKey & etc options when using
   //    credentials obtained from sts
   options.awsOptions  = options.awsOptions  ? options.awsOptions : {};
-  options.awsInstance = options.awsInstance ? options.awsInstance : AWS;
 
   return options;
 };
@@ -55,12 +54,12 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
 
   let ddb;
   try {
-    ddb = new this.options.awsInstance.DynamoDB.DocumentClient({
+    ddb = new AWS.DynamoDB.DocumentClient({
       service:     this.dynamoDbInstance,
       credentials: this.options.awsOptions.credentials,
     });
   } catch(exception) {
-    console.log(`Function this.options.awsInstance.DynamoDB.DocumentClient() failed: ${exception}`);
+    console.log(`Function AWS.DynamoDB.DocumentClient() failed: ${exception}`);
   }
 
   const ddbParams = {
@@ -92,7 +91,7 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   assert(startTime, 'startTime required');
   assert(endTime, 'endTime required');
 
-  const ddb = new this.options.awsInstance.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
+  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
