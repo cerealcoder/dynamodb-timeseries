@@ -54,10 +54,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
 
   let ddb;
   try {
-    ddb = new AWS.DynamoDB.DocumentClient({
-      service:     this.dynamoDbInstance,
-      credentials: this.options.awsOptions.credentials,
-    });
+    ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
   } catch(exception) {
     console.log(`Function AWS.DynamoDB.DocumentClient() failed: ${exception}`);
   }
