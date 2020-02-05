@@ -39,9 +39,6 @@ DynamoTimeSeries.verifyOptions = function(options) {
   return options;
 };
 
-/**
- *
- */
 DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   this.verifyOptions(this.options);
   assert(userId, 'userId required');
@@ -49,15 +46,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(epochTime, 'epochTime required');
   assert(evt, 'evt required');
 
-  console.log(`DynamoTimeSeries.putEvent() version ${packageJson.version}`);
-  console.log(this.options);
-
-  let ddb;
-  try {
-    ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
-  } catch(exception) {
-    console.log(`Function AWS.DynamoDB.DocumentClient() failed: ${exception}`);
-  }
+  const ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
 
   const ddbParams = {
     TableName: this.options.tableName,
@@ -68,19 +57,10 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
     }
   };
 
-  let result = null;
-  try {
-    result = await ddb.put(ddbParams).promise();
-  } catch(exception) {
-      console.log(`Function ddb.put() failed: ${exception}, stack = ${exception.stack}`);
-      throw exception;
-  }
+  const result = await ddb.put(ddbParams).promise();
   return result;
 };
 
-/**
- *
- */
 DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTime) {
   this.verifyOptions(this.options);
   assert(userId, 'userId required');
@@ -101,6 +81,5 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   };
 
   const result = await ddb.query(ddbParams).promise();
-
   return result;
 };

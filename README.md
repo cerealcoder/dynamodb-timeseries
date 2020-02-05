@@ -6,21 +6,42 @@
 
         "dependencies": {
             ...
-            "dynamodb-timeseries": "^0.0.1",
+            "dynamodb-timeseries": "^0.0.16",
             ...
         }
 
 1. Add a require statement to your code:
 
-        const DynamoDbTimeSeries = require('dynamodb-timeseries/dynamodb-time-series.js');
+        const DynamoDbTimeSeries = require('dynamodb-timeseries');
 
 1. Create an instance of the API that attaches to a DynamoDB table:
 
-        const dbApiInstance = Object.create(DynamoDbTimeSeries).setOptions({tableName: 'your_table_name'});
+        const tableName           = 'Your existing DynamoDB table name';
+        const dbTimeSeriesOptions = {
+            tableName: tableName,
+            awsOptions: {
+                credentials: {
+                    accessKeyId:     'An access key ID, typically created by STS',
+                    secretAccessKey: 'A secret access key, typically created by STS',
+                    sessionToken:    'A session token, typically created by STS',
+                    expiration:      'The credentials expiration, typically created by STS'
+                }
+            }
+        };
+        const dbApiInstance = Object.create(DynamoDbTimeSeries).setOptions(dbTimeSeriesOptions);
+
+1. Create an event that will be written to the DynamoDB table:
+
+        const event = {
+            foo: 'bar'
+        };
 
 1. Write to the DynamoDB table:
 
-        const putResult = await dbApiInstance.putEvent(timeSeriesUniqueId, 'testEvent', startTime, event);
+        const userId        = 'Your user ID';
+        const eventType     = 'Your event type';
+        const epochTime     = new Date().getTime();
+        await dbApiInstance.putEvent(userId, eventType, epochTime, event);
 
 
 See files `test/*.js` for specific examples.
