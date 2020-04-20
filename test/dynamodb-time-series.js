@@ -1,4 +1,5 @@
 'use strict'
+const assert = require('assert');
 const tape = require('tape')
 const _test = require('tape-promise').default // <---- notice 'default'
 const test = _test(tape) // decorate tape
@@ -34,7 +35,10 @@ async function DynamoDbAwaitTableState(ddb, desiredState) {
     //console.log(described);
     currState = described.Table.TableStatus;
     i = i + 1;
-  } while (currState != desiredState && i < 20);
+    process.stdout.write(`${i}.`);
+  } while (currState != desiredState && i < 45);
+  console.log('');
+  assert(i < 45, 'timed out waiting for dynamodb to change state');
 
   return described;
 
@@ -96,10 +100,11 @@ test('put and get a time series event', async function(t) {
   t.ok(_.isEqual(putResult, {}), 'put result is an empty object?... okay aws');
 
   const getResult = await ddbts.getEvents(userId, 'testEvent', startTime, endTime);
-  //console.log(getResult);
-  t.equal(getResult.Items.length, 1, 'one item put, one item queried');
-  t.equal(getResult.Items[0].UserIdType, userId + eventType , 'user ID and type match what was queried');
-  t.ok(_.isEqual(getResult.Items[0].Event, event), 'event contents queried is same as was put');
+  console.log(getResult);
+  t.equal(getResult.length, 1, 'one item put, one item queried');
+  t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what was queried');
+  t.equal(getResult[0].epochTimeMilliSec, startTime, 'event time was the same as was put');
+  t.ok(_.isEqual(getResult[0].event, event), 'event contents queried is same as was put');
 
 });
 

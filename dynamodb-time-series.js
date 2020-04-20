@@ -53,7 +53,11 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
     Item: {
       UserIdType: userId + eventType,
       EpochTime: epochTime,
-      Event: evt,
+      Event: {
+        epochTimeMilliSec: epochTime,
+        mfgrId: eventType,
+        event: evt,
+      },
     }
   };
 
@@ -81,5 +85,7 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   };
 
   const result = await ddb.query(ddbParams).promise();
-  return result;
+  return result.Items.map(el => {
+    return el.Event;
+  });
 };

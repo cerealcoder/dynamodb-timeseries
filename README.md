@@ -2,11 +2,12 @@
 
 ## Usage
 
-1. Add this package to your package.json file:
+1. Add this package and if necessary, a peer dependency of the aws SDK to your package.json file:
 
         "dependencies": {
             ...
-            "dynamodb-timeseries": "^0.0.16",
+            "dynamodb-timeseries": "^0.1.00",
+            "aws-sdk: "^2.x",
             ...
         }
 
@@ -46,6 +47,16 @@
 
 See files `test/*.js` for specific examples.
 
+### output format
+
+    [
+      {
+       // outer attributes are common no matter the manufacturer
+       epochTimeMilliSec: ... per Javascript standard.  56 bit int or a 64 bit float ... ,
+       mfgrId: '<ID of the manufacturer>'
+       event: { ... event specific to the manufacturer, see their API ... },
+      }
+    ]
 
 ### Prerequisites
 * You must have access to AWS, including any credentials, IAM permissions, and region as required by the AWS SDK
@@ -55,6 +66,7 @@ See files `test/*.js` for specific examples.
 
 ### Prerequisites
 * Set environment variable `AWS_DEFAULT_REGION`
+* set environment variable `export NPM_TOKEN=$(cat ~/.npm/token)`
 * Make your AWS credentials available in file `~/.aws`
 
 
@@ -71,17 +83,9 @@ See files `test/*.js` for specific examples.
 
         npm install
         
-1. Navigate to the test directory:
-
-        cd test
-        
-1. Run NPM install again (for the test directory)
-
-        npm install
-        
 1. Run the unit tests
 
-        npm test *.js
+        npm test test/*.js
 
 
 ### Automated Invocation
