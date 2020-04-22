@@ -100,13 +100,42 @@ test('put and get a time series event', async function(t) {
   t.ok(_.isEqual(putResult, {}), 'put result is an empty object?... okay aws');
 
   const getResult = await ddbts.getEvents(userId, 'testEvent', startTime, endTime);
-  console.log(getResult);
+  //console.log(getResult);
   t.equal(getResult.length, 1, 'one item put, one item queried');
   t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what was queried');
   t.equal(getResult[0].epochTimeMilliSec, startTime, 'event time was the same as was put');
   t.ok(_.isEqual(getResult[0].event, event), 'event contents queried is same as was put');
 
 });
+
+test('batch put and get time series events', async function(t) {
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+  const userId = random.string(16);
+  const eventType = 'testEvent';
+  const events = [
+    {
+      epochTimeMilliSec: 100,
+      event: JSON.stringify( { eventFoo: 'super' }),
+    },
+    {
+      epochTimeMilliSec: 200,
+      event: JSON.stringify( { eventFoo: 'cali' }),
+    },
+  ];
+
+  const putResult = await ddbts.putEvents(userId, eventType, events);
+  //console.log(putResult);
+  t.equal(putResult, 2, 'the number of items put is what was requested');
+
+  const getResult = await ddbts.getEvents(userId, eventType, 100, 200);
+  //console.log(getResult);
+  t.equal(getResult.length, 2, 'two  items put, two items queried');
+  t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what was queried');
+  t.equal(getResult[0].epochTimeMilliSec, 100, 'event time was the same as was put');
+  //t.ok(_.isEqual(getResult[0].event, event), 'event contents queried is same as was put');
+
+});
+
 
 test('create an time series DB instance with an invalid credential option and make sure correct error is thrown', async function(t) {
   const ddbts = Object.create(Ddbts).setOptions({

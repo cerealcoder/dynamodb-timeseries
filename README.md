@@ -1,8 +1,11 @@
 # DynamoDB Time Series
+This module allows one to use a dynamodb table as a time-series database, allowing queries for
+time ranges, and allows keeping data from different sources in the same table.
 
 ## Usage
 
-1. Add this package and if necessary, a peer dependency of the aws SDK to your package.json file:
+1. Add this package and if necessary, a peer dependency of the AWS SDK to your package.json file.  
+Note that AWS Lambda does not require the inclusion of the AWS SDK, it does that for you.
 
         "dependencies": {
             ...
