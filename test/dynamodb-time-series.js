@@ -108,10 +108,73 @@ test('put and get a time series event', async function(t) {
 
 });
 
+test('put and get a time series event Array', async function(t) {
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+  const userId = random.string(16);
+  const eventType = 'arrayEvent';
+  const startTime = 100;
+  const endTime = 1000;
+  const event = [
+    { eventFoo: 'bar1' },
+    { eventFoo: 'bar2' },
+    { eventFoo: 'bar3' },
+  ];
+
+  const foo = [].concat(event);
+
+  const putResult = await ddbts.putEvent(userId, eventType, startTime, event);
+  //console.log(putResult);
+  t.ok(_.isEqual(putResult, {}), 'put result is an empty object?... okay aws');
+
+  const getResult = await ddbts.getEvents(userId, eventType, startTime, endTime);
+  t.equal(getResult.length, event.length, 'one array item put, array returned');
+  t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what should have been marshaled');
+  t.equal(getResult[0].epochTimeMilliSec, startTime, 'event time was the same as what should have been marshalled');
+  t.equal(getResult.length, event.length, 'event array length was the same as was put');
+
+});
+
+test('Verify we can chunk data up', async function (t) {
+
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+
+  // Create 10 days worth of data spaced out by a day
+  const startTime = 1447858800001; // 2015-11-18T15:00:00:001
+	const events = [
+		{ eventFoo: 'bar1' },
+		{ eventFoo: 'bar2' },
+		{ eventFoo: 'bar3' },
+		{ eventFoo: 'bar4' },
+		{ eventFoo: 'bar5' },
+		{ eventFoo: 'bar6' },
+		{ eventFoo: 'bar7' },
+		{ eventFoo: 'bar8' },
+		{ eventFoo: 'bar9' },
+		{ eventFoo: 'bar10' },
+	];
+  const marshalled = events.map((el, i) => {
+    return {
+      // NOTE: must match the graphql schema
+      epochTimeMilliSec: new Date(startTime + i * 86400 * 1000).getTime(),
+      mfgrId: 'foo',
+      event: el,
+    };
+  });
+
+  const chunked = ddbts.chunkDataByDay(marshalled);
+  //console.log(chunked);
+  t.equal(chunked.length, 10, 'chunked into 10 days of data');
+  chunked.forEach(el => {
+    //console.log(el);
+    t.equal(el.event.length, 1, 'each chunk is one long');
+  });
+
+});
+
 test('batch put and get time series events', async function(t) {
   const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
   const userId = random.string(16);
-  const eventType = 'testEvent';
+  const eventType = 'batchPut';
   const events = [
     {
       epochTimeMilliSec: 100,
@@ -136,6 +199,47 @@ test('batch put and get time series events', async function(t) {
 
 });
 
+test('Verify we can mass insert data that gets chunked for us', async function (t) {
+
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+  const userId = random.string(16);
+  const eventType = 'chunkedPut';
+
+  // Create 10 days worth of data spaced out by a day
+  const startTime = 1447858800001; // 2015-11-18T15:00:00:001
+	const events = [
+		{ eventFoo: 'bar1' },
+		{ eventFoo: 'bar2' },
+		{ eventFoo: 'bar3' },
+		{ eventFoo: 'bar4' },
+		{ eventFoo: 'bar5' },
+		{ eventFoo: 'bar6' },
+		{ eventFoo: 'bar7' },
+		{ eventFoo: 'bar8' },
+		{ eventFoo: 'bar9' },
+		{ eventFoo: 'bar10' },
+	];
+  const marshalled = events.map((el, i) => {
+    return {
+      // NOTE: must match the graphql schema
+      // XXX Which means a yucky forward dependency
+      epochTimeMilliSec: new Date(startTime + i * 86400 * 1000).getTime(),
+      mfgrId: eventType,
+      event: el,
+    };
+  });
+
+  const putResult = await ddbts.putEventsInChunks(userId, eventType, marshalled);
+
+  //console.log(putResult);
+
+  const getResult = await ddbts.getEvents(userId, eventType, startTime, marshalled[marshalled.length-1].epochTimeMilliSec);
+  //console.log(getResult);
+  t.equal(getResult.length, events.length, 'length of result is what we got');
+  t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what was queried');
+ 
+
+});
 
 test('create an time series DB instance with an invalid credential option and make sure correct error is thrown', async function(t) {
   const ddbts = Object.create(Ddbts).setOptions({
