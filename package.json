@@ -1,6 +1,6 @@
 {
   "name": "dynamodb-timeseries",
-  "version": "0.2.00",
+  "version": "0.2.03",
   "repository": "https://github.com/cerealcoder/dynamodb-timeseries",
   "description": "A simple wrapper to get/set time-series data from AWS DynamoDB.",
   "main": "dynamodb-time-series.js",
@@ -10,16 +10,19 @@
   "author": "pszabop",
   "license": "ISC",
   "dependencies": {
-    "@aws/dynamodb-batch-iterator": "^0.7.1"
+    "@aws/dynamodb-batch-iterator": "^0.7.1",
+    "bluebird": "^3.7.2",
+    "node-gzip": "^1.1.2"
   },
   "peerDependencies": {
+    "underscore": "^1.9.1",
     "aws-sdk": "^2.x"
   },
   "devDependencies": {
     "aws-sdk": "^2.610.0",
     "tape": "^4.10.1",
     "tape-promise": "^4.0.0",
-    "random-js": "^2.1.0",
-    "underscore": "^1.9.1"
+    "underscore": "^1.9.1",
+    "random-js": "^2.1.0"
   }
 }

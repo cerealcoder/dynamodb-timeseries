@@ -241,6 +241,47 @@ test('Verify we can mass insert data that gets chunked for us', async function (
 
 });
 
+test('Verify we find the last latest event from chunked data', async function (t) {
+
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+  const userId = random.string(16);
+  const eventType = 'chunkedPut';
+
+  // Create 10 days worth of data spaced out by a day
+  const startTime = 1447858800001; // 2015-11-18T15:00:00:001
+	const events = [
+		{ eventFoo: 'bar1' },
+		{ eventFoo: 'bar2' },
+		{ eventFoo: 'bar3' },
+		{ eventFoo: 'bar4' },
+		{ eventFoo: 'bar5' },
+		{ eventFoo: 'bar6' },
+		{ eventFoo: 'bar7' },
+		{ eventFoo: 'bar8' },
+		{ eventFoo: 'bar9' },
+		{ eventFoo: 'bar10' },
+	];
+  const marshalled = events.map((el, i) => {
+    return {
+      // NOTE: must match the graphql schema
+      // XXX Which means a yucky forward dependency
+      epochTimeMilliSec: new Date(startTime + i * 86400 * 1000).getTime(),
+      mfgrId: eventType,
+      event: el,
+    };
+  });
+
+  const putResult = await ddbts.putEventsInChunks(userId, eventType, marshalled);
+
+  //console.log(putResult);
+
+  const getResult = await ddbts.getLatest(userId, eventType);
+  //console.log(getResult);
+  t.equal(getResult.epochTimeMilliSec, marshalled[marshalled.length - 1].epochTimeMilliSec, 'got timestamp of last item');
+ 
+});
+
+
 test('create an time series DB instance with an invalid credential option and make sure correct error is thrown', async function(t) {
   const ddbts = Object.create(Ddbts).setOptions({
     tableName: TableName, 
@@ -259,6 +300,7 @@ test('create an time series DB instance with an invalid credential option and ma
   try {
     putResult = await ddbts.putEvent(userId, 'testEvent', startTime, event);
   } catch (e) {
+    //console.log(e);
     t.equal(e.code, 'CredentialsError', 'Credentials error was thrown when using bogus credentials as options to time series db');
     return;
   }

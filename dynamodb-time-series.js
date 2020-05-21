@@ -5,11 +5,15 @@ const AWS = require('aws-sdk');
 const packageJson = require('./package.json');
 const DynamoDbBatchIterator = require('@aws/dynamodb-batch-iterator');
 const _ = require('underscore');
+const {gzip, ungzip} = require('node-gzip');
+const Promise = require('bluebird');
 
 
 const DynamoTimeSeries = Object.create({});
 exports = module.exports = DynamoTimeSeries;
 
+// outside of everything so we have connection reuse
+var ddb;
 
 // 
 // set options
@@ -21,6 +25,7 @@ DynamoTimeSeries.options = {
 DynamoTimeSeries.setOptions = function(options) {
   this.options = this.verifyOptions(options);
   this.dynamoDbInstance = new AWS.DynamoDB( options.awsOptions );
+  ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
   return this;
 };
 
@@ -67,17 +72,20 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
       return el;
     });
   }
-  const ddb = new AWS.DynamoDB.DocumentClient({service: this.dynamoDbInstance});
+
+  const evtCompressed = await gzip(JSON.stringify(marshalledEvent));
+
 
   const ddbParams = {
     TableName: this.options.tableName,
     Item: {
       UserIdType: userId + eventType,
       EpochTime: epochTime,
+      Gzip: true,
       Event: {
         epochTimeMilliSec: epochTime,
         mfgrId: eventType,
-        event: evt,
+        event: evtCompressed,
       },
     }
   };
@@ -103,7 +111,7 @@ DynamoTimeSeries.putEvents = async function(userId, eventType, evts) {
   assert(evts, 'evt required');
   assert(Array.isArray(evts), 'evts must be an array');
 
-  const ddb = new AWS.DynamoDB({service: this.dynamoDbInstance});
+  const ddbLocal = new AWS.DynamoDB({ service: this.dynamoDbInstance });
 
   // @see https://github.com/awslabs/dynamodb-data-mapper-js/tree/master/packages/dynamodb-batch-iterator
   const marshalledEvents = evts.map(el => {
@@ -134,7 +142,7 @@ DynamoTimeSeries.putEvents = async function(userId, eventType, evts) {
   
   // wish I could figure out how to do a simple await for the entire thing to be done
   let count = 0;
-  for await (const item of new DynamoDbBatchIterator.BatchWrite(ddb, marshalledEvents)) {
+  for await (const item of new DynamoDbBatchIterator.BatchWrite(ddbLocal, marshalledEvents)) {
     //console.log(item);
     count++;
   }
@@ -152,7 +160,6 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   assert(startTime, 'startTime required');
   assert(endTime, 'endTime required');
 
-  const ddb = new AWS.DynamoDB.DocumentClient({ service: this.dynamoDbInstance });
 
   const ddbParams = {
     TableName: this.options.tableName,
@@ -165,6 +172,46 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
   };
 
   const result = await ddb.query(ddbParams).promise();
+  const uncompressedEvents = await Promise.map(result.Items, async (el) => {
+    if (el.Gzip) {
+      const eventUnzipped = await ungzip(el.Event.event);
+      el.Event.event = JSON.parse(eventUnzipped);
+    }
+    return el.Event;
+  });
+  return uncompressedEvents.reduce((acc, el) => {
+    // flatten multiple array results down to one big array
+    if (Array.isArray(el.event)) {
+      Array.prototype.push.apply(acc, el.event)
+    } else {
+      acc.push(el);
+    }
+    return acc;
+  },[]);
+};
+
+/**
+ * @brief return latest item in the time series efficiently, we hope
+ *
+ */
+DynamoTimeSeries.getLatest = async function(userId, eventType) {
+  this.verifyOptions(this.options);
+  assert(userId, 'userId required');
+  assert(eventType, 'eventType required');
+
+  const ddbParams = {
+    TableName: this.options.tableName,
+    KeyConditionExpression: 'UserIdType = :UserIdType',
+    ScanIndexForward: false,
+    Limit: 1,
+    ExpressionAttributeValues: {
+      ':UserIdType': userId + eventType,
+    },
+    ReturnConsumedCapacity: 'TOTAL',
+  };
+
+  const result = await ddb.query(ddbParams).promise();
+  //console.log(JSON.stringify(result.ConsumedCapacity,null,2));
   return result.Items.map(el => {
     return el.Event;
   }).reduce((acc, el) => {
@@ -175,7 +222,7 @@ DynamoTimeSeries.getEvents = async function(userId, eventType, startTime, endTim
       acc.push(el);
     }
     return acc;
-  },[]);
+  },[]).pop();
 };
 
 
