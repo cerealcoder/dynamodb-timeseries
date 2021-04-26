@@ -3,7 +3,6 @@ services:
   app:
     image: node:latest
     environment:
-      - API_GATEWAY_URL
       - NPM_TOKEN
         # @see https://github.com/aws/aws-sdk-js/pull/1391
         # @see https://stackoverflow.com/questions/57768714/get-region-from-aws-cli-using-node

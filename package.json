@@ -1,6 +1,6 @@
 {
   "name": "dynamodb-timeseries",
-  "version": "0.2.03",
+  "version": "0.2.4",
   "repository": "https://github.com/cerealcoder/dynamodb-timeseries",
   "description": "A simple wrapper to get/set time-series data from AWS DynamoDB.",
   "main": "dynamodb-time-series.js",

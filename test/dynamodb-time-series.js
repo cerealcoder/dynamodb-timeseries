@@ -108,6 +108,32 @@ test('put and get a time series event', async function(t) {
 
 });
 
+test('put get, and delete a time series event', async function(t) {
+  const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
+  const userId = random.string(16);
+  const eventType = 'testEvent';
+  const startTime = 100;
+  const endTime = 1000;
+  const event = { eventFoo: 'bar' };
+
+
+  const putResult = await ddbts.putEvent(userId, 'testEvent', startTime, event);
+  //console.log(putResult);
+  t.ok(_.isEqual(putResult, {}), 'put result is an empty object?... okay aws');
+
+  const getResult = await ddbts.getEvents(userId, 'testEvent', startTime, endTime);
+  //console.log(getResult);
+  t.equal(getResult.length, 1, 'one item put, one item queried');
+  t.equal(getResult[0].mfgrId, eventType , 'user ID and type match what was queried');
+  t.equal(getResult[0].epochTimeMilliSec, startTime, 'event time was the same as was put');
+  t.ok(_.isEqual(getResult[0].event, event), 'event contents queried is same as was put');
+
+  const delResult = await ddbts.delEvent(userId, 'testEvent', startTime);
+  t.ok(_.isEqual(delResult, {}), 'del result is an empty object?... okay aws');
+  const getResult2 = await ddbts.getEvents(userId, 'testEvent', startTime, endTime);
+  t.equal(getResult2.length, 0, 'one item put, then deleted, zero items queried');
+});
+
 test('put and get a time series event Array', async function(t) {
   const ddbts = Object.create(Ddbts).setOptions({tableName: TableName});
   const userId = random.string(16);

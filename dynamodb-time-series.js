@@ -95,6 +95,27 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
 };
 
 
+/**
+ *
+ */
+DynamoTimeSeries.delEvent = async function(userId, eventType, epochTime) {
+  this.verifyOptions(this.options);
+  assert(userId, 'userId required');
+  assert(eventType, 'eventType required');
+  assert(epochTime, 'epochTime required');
+
+  const ddbParams = {
+    TableName: this.options.tableName,
+    Key: {
+      UserIdType: userId + eventType,
+      EpochTime: epochTime,
+    }
+  };
+
+  const result = await ddb.delete(ddbParams).promise();
+  return result;
+};
+
 
 
 /**
