@@ -57,6 +57,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(evt, 'evt required');
 
   let marshalledEvent = evt;
+  let mfgrId;
 
   if (_.isArray(evt)) {
     // each element of the array must look like
@@ -69,8 +70,17 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
       if (el.epochTimeMilliSec === undefined) {
         el.epochTimeMilliSec = epochTime;
       }
+      if (!mfgrId) {
+        mfgrId =  el.mfgrId;
+      }
       return el;
     });
+  } else {
+    if (evt.mfgrId) {
+      mfgrId = evt.mfgrId;
+    } else {
+      mfgrId = evt.mfgrId = eventType;
+    }
   }
 
   const evtCompressed = await gzip(JSON.stringify(marshalledEvent));
@@ -84,7 +94,7 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
       Gzip: true,
       Event: {
         epochTimeMilliSec: epochTime,
-        mfgrId: eventType,
+        mfgrId: mfgrId,
         event: evtCompressed,
       },
     }
