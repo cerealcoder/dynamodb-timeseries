@@ -75,12 +75,14 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
       }
       return el;
     });
-  } else {
+  } else if (_.isObject(evt)){
     if (evt.mfgrId) {
       mfgrId = evt.mfgrId;
     } else {
-      mfgrId = evt.mfgrId = eventType;
+      mfgrId = eventType;
     }
+  } else {
+    mfgrId = eventType;
   }
 
   const evtCompressed = await gzip(JSON.stringify(marshalledEvent));
