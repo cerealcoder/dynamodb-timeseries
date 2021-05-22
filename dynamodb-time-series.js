@@ -49,7 +49,7 @@ DynamoTimeSeries.verifyOptions = function(options) {
 /**
  *
  */
-DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
+DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt, mfgrId) {
   this.verifyOptions(this.options);
   assert(userId, 'userId required');
   assert(eventType, 'eventType required');
@@ -57,32 +57,34 @@ DynamoTimeSeries.putEvent = async function(userId, eventType, epochTime, evt) {
   assert(evt, 'evt required');
 
   let marshalledEvent = evt;
-  let mfgrId;
 
+  //
+  // gruesome backwards compatibility
+  //
   if (_.isArray(evt)) {
     // each element of the array must look like
     // a standardized event so that unmarshalling
     // of arrays in getEvents works properly
     marshalledEvent = evt.map(el => {
       if (el.mfgrId === undefined) {
-        el.mfgrId = eventType;
+        el.mfgrId = (mfgrId !== undefined)? mfgrId: eventType;
       }
       if (el.epochTimeMilliSec === undefined) {
         el.epochTimeMilliSec = epochTime;
       }
-      if (!mfgrId) {
+      if (mfgrId === undefined) {
         mfgrId =  el.mfgrId;
       }
       return el;
     });
   } else if (_.isObject(evt)){
-    if (evt.mfgrId) {
+    if (evt.mfgrId !== undefined && mfgrId === undefined) {
       mfgrId = evt.mfgrId;
     } else {
-      mfgrId = eventType;
+      mfgrId = (mfgrId !== undefined)? mfgrId: eventType;
     }
   } else {
-    mfgrId = eventType;
+    mfgrId = (mfgrId !== undefined)? mfgrId: eventType;
   }
 
   const evtCompressed = await gzip(JSON.stringify(marshalledEvent));
